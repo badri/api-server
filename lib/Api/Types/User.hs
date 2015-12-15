@@ -6,10 +6,7 @@ module Api.Types.User
 , Login (..)
 ) where
 
-import Control.Applicative ((<$>), (<*>))
 import Control.Monad (mzero)
-import Hasql (RowParser, parseRow)
-import Hasql.Postgres (Postgres)
 import Data.Aeson ((.=), (.:), FromJSON, ToJSON, Value(..), parseJSON, toJSON, object)
 
 import Api.Types.Fields
@@ -26,12 +23,6 @@ instance ToJSON User where
     object [ "user_id"     .= uid
            , "resource_id" .= rid
            ]
-
-instance RowParser Postgres User where
-  parseRow row = parseRow row >>= \(a,b) -> do
-    let a' = UserID a
-        b' = ResourceID <$> b
-    return $ User a' b'
 
 -- Login type
 
@@ -51,9 +42,3 @@ instance ToJSON Login where
     object [ "user_id"   .= uid
            , "api_token" .= token
            ]
-
-instance RowParser Postgres Login where
-  parseRow row = parseRow row >>= \(a,b) -> do
-    let a' = UserID a
-        b' = UserToken b
-    return $ Login a' b'

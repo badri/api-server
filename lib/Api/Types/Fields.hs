@@ -5,8 +5,8 @@ module Api.Types.Fields where
 
 import Control.Monad (mzero)
 import Data.Aeson (FromJSON, ToJSON, Value(..), parseJSON, toJSON)
-import Hasql.Backend (Mapping (..))
-import Hasql.Postgres (Postgres)
+import Hasql.Backend
+import Hasql.Postgres
 import Text.Email.Validate (EmailAddress, emailAddress, toByteString)
 import Web.Scotty.Trans (Parsable, parseParam)
 
@@ -19,23 +19,23 @@ import qualified Data.Text.Lazy.Encoding    as LE
 
 -- newtype-wrapped database fields
 
-newtype UserID          = UserID Int                  deriving (Byteable, Eq, Show, FromJSON, ToJSON, Parsable)
-newtype UserToken       = UserToken ST.Text           deriving (Byteable, Eq, Show, FromJSON, ToJSON, Parsable)
+newtype UserID          = UserID Int                  deriving (Eq, Show, FromJSON, ToJSON,  CxValue Postgres)
+newtype UserToken       = UserToken ST.Text           deriving (Eq, Show, FromJSON, ToJSON,  CxValue Postgres)
 
-newtype PendingID       = PendingID Int               deriving (Byteable, Eq, Show, FromJSON, ToJSON, Parsable)
-newtype PendingUUID     = PendingUUID ST.Text         deriving (Byteable, Eq, Show, FromJSON, ToJSON, Parsable)
+newtype PendingID       = PendingID Int               deriving (Eq, Show, FromJSON, ToJSON,  CxValue Postgres)
+newtype PendingUUID     = PendingUUID ST.Text         deriving (Eq, Show, FromJSON, ToJSON,  CxValue Postgres)
 
-newtype ResourceID       = ResourceID Int             deriving (Byteable, Eq, Show, FromJSON, ToJSON, Parsable)
-newtype ResourceName     = ResourceName ST.Text       deriving (Byteable, Eq, Show, FromJSON, ToJSON, Parsable)
-newtype ResourceEmail    = ResourceEmail EmailAddress deriving (Byteable, Eq, Show, FromJSON, ToJSON, Parsable)
-newtype ResourceOptional = ResourceOptional ST.Text   deriving (Byteable, Eq, Show, FromJSON, ToJSON, Parsable)
+newtype ResourceID       = ResourceID Int             deriving (Eq, Show, FromJSON, ToJSON,  CxValue Postgres)
+newtype ResourceName     = ResourceName ST.Text       deriving (Eq, Show, FromJSON, ToJSON,  CxValue Postgres)
+newtype ResourceEmail    = ResourceEmail EmailAddress deriving (Eq, Show, FromJSON, ToJSON,  CxValue Postgres)
+newtype ResourceOptional = ResourceOptional ST.Text   deriving (Eq, Show, FromJSON, ToJSON,  CxValue Postgres)
 
 -- Email address instances
 
-instance Mapping Postgres EmailAddress where
-  renderValue = renderValue . SE.decodeUtf8 . toBytes
-  parseResult sql =
-    parseResult sql >>= \text ->
+instance CxValue Postgres EmailAddress where
+  encodeValue = encodeValue . SE.decodeUtf8 . toBytes
+  decodeValue sql =
+    decodeValue sql >>= \text ->
       case emailAddress $ SE.encodeUtf8 text of
         Just email -> Right email
         _          -> Left "could not parse email from SQL"
